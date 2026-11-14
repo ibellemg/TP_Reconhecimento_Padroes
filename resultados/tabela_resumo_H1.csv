@@ -1,0 +1,10 @@
+classificador,representacao,F1-Macro,Acurácia,Tempo (s)
+KNN,dados brutos,72.70% ± 0.91%,72.62% ± 0.88%,0.044s ± 0.011s
+KNN,MinMax,93.24% ± 0.46%,92.01% ± 0.51%,0.040s ± 0.003s
+KNN,padronizados,93.51% ± 0.56%,92.25% ± 0.62%,0.041s ± 0.004s
+SVM,dados brutos,59.62% ± 0.74%,63.51% ± 0.84%,2.032s ± 0.029s
+SVM,MinMax,93.61% ± 0.47%,92.44% ± 0.57%,0.689s ± 0.039s
+SVM,padronizados,94.02% ± 0.49%,92.89% ± 0.57%,0.557s ± 0.006s
+Naive Bayes,dados brutos,76.50% ± 0.89%,76.36% ± 0.90%,0.010s ± 0.005s
+Naive Bayes,MinMax,90.63% ± 0.56%,89.68% ± 0.64%,0.012s ± 0.004s
+Naive Bayes,padronizados,90.63% ± 0.56%,89.68% ± 0.64%,0.014s ± 0.004s

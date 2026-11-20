@@ -9,9 +9,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, f1_score
 
-# 1. Configurar caminhos e garantir que o diretório de resultados exista
+# 1. Configurar caminhos (resultados/H1/) e garantir que o diretório exista
 DATASET_PATH = "dataset/Dry_Bean_Dataset/Dry_Bean_Dataset.xlsx"
-RESULTS_PATH = "resultados/"
+RESULTS_PATH = os.path.join("resultados", "H1")
 os.makedirs(RESULTS_PATH, exist_ok=True)
 
 CSV_OUTPUT_PATH = os.path.join(RESULTS_PATH, "resultados_H1.csv")
@@ -24,10 +24,11 @@ y = df['Class']
 # 3. Configurar o protocolo de validação (5-fold estratificado, 3 repetições, random_state=42)
 cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=42)
 
-# 4. Definir classificadores e representações
+# 4. Definir classificadores (incluindo Naive Bayes padrão e com var_smoothing=0) e representações
 classificadores = {
     'KNN': KNeighborsClassifier(),
-    'Naive Bayes': GaussianNB(),
+    'Naive Bayes': GaussianNB(),  # padrão: var_smoothing=1e-9
+    'Naive Bayes (var_smoothing=0)': GaussianNB(var_smoothing=0),
     'SVM': SVC()
 }
 
@@ -79,7 +80,7 @@ for nome_rep, scaler in representacoes.items():
                 'tempo_s': tempo_s
             })
 
-# 6. Gerar e salvar o CSV final no caminho configurado
+# 6. Gerar e salvar o CSV final dentro de resultados/H1/
 df_resultados = pd.DataFrame(resultados)
 df_resultados.to_csv(CSV_OUTPUT_PATH, index=False)
 

@@ -13,7 +13,7 @@ from sklearn.metrics import confusion_matrix
 
 # 1. Configurar caminhos
 DATASET_PATH = "dataset/Dry_Bean_Dataset/Dry_Bean_Dataset.xlsx"
-RESULTS_PATH = "resultados/"
+RESULTS_PATH = os.path.join("resultados", "H1")
 os.makedirs(RESULTS_PATH, exist_ok=True)
 
 CSV_INPUT_PATH = os.path.join(RESULTS_PATH, "resultados_H1.csv")
@@ -26,9 +26,28 @@ plt.rcParams.update({'font.size': 11, 'figure.dpi': 150})
 df_res = pd.read_csv(CSV_INPUT_PATH)
 
 ordem_rep = ['dados brutos', 'MinMax', 'padronizados']
-ordem_clf = ['KNN', 'SVM', 'Naive Bayes']
+ordem_clf = ['KNN', 'SVM', 'Naive Bayes', 'Naive Bayes (var_smoothing=0)']
 df_res['representacao'] = pd.Categorical(df_res['representacao'], categories=ordem_rep, ordered=True)
 df_res['classificador'] = pd.Categorical(df_res['classificador'], categories=ordem_clf, ordered=True)
+
+# Rótulos formatados em 2 linhas para evitar sobreposição no eixo X
+mapa_rotulos = {
+    'KNN': 'KNN',
+    'SVM': 'SVM',
+    'Naive Bayes': 'Naive Bayes\n(padrão)',
+    'Naive Bayes (var_smoothing=0)': 'Naive Bayes\n(var_smoothing=0)'
+}
+ordem_labels = [
+    'KNN',
+    'SVM',
+    'Naive Bayes\n(padrão)',
+    'Naive Bayes\n(var_smoothing=0)'
+]
+df_res['clf_label'] = pd.Categorical(
+    df_res['classificador'].map(mapa_rotulos),
+    categories=ordem_labels,
+    ordered=True
+)
 
 # ==============================================================================
 # 3. TABELAS DE RESUMO (Média ± Desvio Padrão e Ganho)
@@ -57,7 +76,6 @@ pivot_f1['Ganho Padronizado (p.p.)'] = pivot_f1['padronizados'] - pivot_f1['dado
 print("\n=== IMPACTO NO F1-MACRO (%) E GANHO EM PONTOS PERCENTUAIS ===")
 print(pivot_f1.round(2))
 
-# Salvar tabelas na pasta resultados/
 caminho_tab_resumo = os.path.join(RESULTS_PATH, "tabela_resumo_H1.csv")
 caminho_tab_ganho = os.path.join(RESULTS_PATH, "tabela_ganho_f1_H1.csv")
 tabela_formatada.to_csv(caminho_tab_resumo, index=False)
@@ -66,46 +84,50 @@ pivot_f1.round(2).to_csv(caminho_tab_ganho)
 # ==============================================================================
 # 4. GRÁFICO 1: Barras Agrupadas (F1-Macro e Acurácia)
 # ==============================================================================
-fig, axes = plt.subplots(1, 2, figsize=(13, 5), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(14, 5.5), sharey=True)
 
 sns.barplot(
-    data=df_res, x='classificador', y='f1_macro', hue='representacao',
+    data=df_res, x='clf_label', y='f1_macro', hue='representacao',
     ax=axes[0], capsize=.05, err_kws={'linewidth': 1.2}
 )
 axes[0].set_title('Impacto da Escala no F1-Macro (Principal)')
 axes[0].set_xlabel('Classificador')
 axes[0].set_ylabel('Pontuação (0 a 1)')
 axes[0].set_ylim(0.5, 1.0)
-axes[0].legend(title='Representação', loc='lower right')
 
 sns.barplot(
-    data=df_res, x='classificador', y='acuracia', hue='representacao',
+    data=df_res, x='clf_label', y='acuracia', hue='representacao',
     ax=axes[1], capsize=.05, err_kws={'linewidth': 1.2}
 )
 axes[1].set_title('Impacto da Escala na Acurácia')
 axes[1].set_xlabel('Classificador')
 axes[1].set_ylabel('')
-axes[1].legend(title='Representação', loc='lower right')
 
-plt.tight_layout()
+# Legenda única no topo para não cobrir as barras
+handles, labels = axes[0].get_legend_handles_labels()
+axes[0].get_legend().remove()
+axes[1].get_legend().remove()
+fig.legend(handles, labels, title='Representação', loc='upper center', ncol=3, frameon=True, bbox_to_anchor=(0.5, 1.02))
+
+plt.tight_layout(rect=[0, 0, 1, 0.92])
 caminho_fig1 = os.path.join(RESULTS_PATH, "h1_comparacao_metricas.png")
-plt.savefig(caminho_fig1)
+plt.savefig(caminho_fig1, bbox_inches='tight')
 plt.close()
 
 # ==============================================================================
 # 5. GRÁFICO 2: Boxplot de Estabilidade e Tempo de Execução
 # ==============================================================================
-fig, axes = plt.subplots(1, 2, figsize=(13, 5))
+fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
 
 sns.boxplot(
-    data=df_res, x='classificador', y='f1_macro', hue='representacao', ax=axes[0]
+    data=df_res, x='clf_label', y='f1_macro', hue='representacao', ax=axes[0]
 )
 axes[0].set_title('Distribuição e Estabilidade do F1-Macro (15 execuções)')
 axes[0].set_xlabel('Classificador')
 axes[0].set_ylabel('F1-Macro')
 
 sns.barplot(
-    data=df_res, x='classificador', y='tempo_s', hue='representacao',
+    data=df_res, x='clf_label', y='tempo_s', hue='representacao',
     ax=axes[1], capsize=.05, err_kws={'linewidth': 1.2}
 )
 axes[1].set_title('Tempo Médio de Execução (Treino + Predição)')
@@ -113,9 +135,15 @@ axes[1].set_xlabel('Classificador')
 axes[1].set_ylabel('Tempo (segundos - escala log)')
 axes[1].set_yscale('log')
 
-plt.tight_layout()
+# Legenda única no topo
+handles, labels = axes[0].get_legend_handles_labels()
+axes[0].get_legend().remove()
+axes[1].get_legend().remove()
+fig.legend(handles, labels, title='Representação', loc='upper center', ncol=3, frameon=True, bbox_to_anchor=(0.5, 1.02))
+
+plt.tight_layout(rect=[0, 0, 1, 0.92])
 caminho_fig2 = os.path.join(RESULTS_PATH, "h1_boxplot_e_tempo.png")
-plt.savefig(caminho_fig2)
+plt.savefig(caminho_fig2, bbox_inches='tight')
 plt.close()
 
 # ==============================================================================
@@ -132,7 +160,8 @@ skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 modelos = {
     'KNN': KNeighborsClassifier(),
     'SVM': SVC(),
-    'Naive Bayes': GaussianNB()
+    'Naive Bayes (padrão)': GaussianNB(),
+    'Naive Bayes (var_smoothing=0)': GaussianNB(var_smoothing=0)
 }
 
 cenarios_cm = {
@@ -140,7 +169,7 @@ cenarios_cm = {
     'Padronizados': StandardScaler()
 }
 
-fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+fig, axes = plt.subplots(2, 4, figsize=(21, 10))
 
 for row_idx, (nome_cenario, scaler) in enumerate(cenarios_cm.items()):
     for col_idx, (nome_clf, clf) in enumerate(modelos.items()):
@@ -159,7 +188,7 @@ for row_idx, (nome_cenario, scaler) in enumerate(cenarios_cm.items()):
             cm_norm, annot=True, fmt='.1f', cmap='Blues',
             xticklabels=classes, yticklabels=classes, cbar=False, ax=ax
         )
-        ax.set_title(f"{nome_clf} — {nome_cenario} (%)")
+        ax.set_title(f"{nome_clf}\n{nome_cenario} (%)")
         ax.set_xlabel('Predito' if row_idx == 1 else '')
         ax.set_ylabel('Real' if col_idx == 0 else '')
         ax.tick_params(axis='x', rotation=45)
@@ -167,7 +196,7 @@ for row_idx, (nome_cenario, scaler) in enumerate(cenarios_cm.items()):
 
 plt.tight_layout()
 caminho_fig3 = os.path.join(RESULTS_PATH, "h1_matrizes_confusao.png")
-plt.savefig(caminho_fig3)
+plt.savefig(caminho_fig3, bbox_inches='tight')
 plt.close()
 
 print(f"\nAnálise concluída! Todos os arquivos foram salvos em '{RESULTS_PATH}':")

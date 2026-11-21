@@ -1,0 +1,10 @@
+classificador,dimensoes,remocao,F1 PCA (%),F1 remoção (%),diferença PCA - remoção (p.p.),desvio da diferença (p.p.),folds com PCA melhor,p-valor Wilcoxon
+KNN,7,remocao r>0.90,93.4213,92.5265,0.8947,0.347,15/15,0.0001
+KNN,9,remocao r>0.95,93.5134,93.4076,0.1058,0.1646,12/15,0.0302
+KNN,13,remocao r>0.99,93.5119,93.479,0.0329,0.1252,10/15,0.3591
+Naive Bayes,7,remocao r>0.90,91.3897,90.3312,1.0585,0.3706,15/15,0.0001
+Naive Bayes,9,remocao r>0.95,90.9575,91.3809,-0.4235,0.5137,3/15,0.0103
+Naive Bayes,13,remocao r>0.99,90.1026,91.0818,-0.9792,0.5688,1/15,0.0002
+SVM,7,remocao r>0.90,93.9675,94.0281,-0.0606,0.1976,5/15,0.3303
+SVM,9,remocao r>0.95,94.0156,94.1745,-0.1589,0.1407,3/15,0.0009
+SVM,13,remocao r>0.99,94.0156,94.0893,-0.0737,0.0935,3/15,0.0084

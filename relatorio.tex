@@ -1,0 +1,121 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{itemsep=2pt, topsep=4pt}
+
+\title{O impacto da representação dos dados no desempenho de classificadores:
+um estudo com a base \emph{Dry Bean}}
+\author{ Arthur Andrade, Thiago Fraga, Wagner, Isabelle, Fernanda\\
+Introdução ao Reconhecimento de Padrões --- UFMG}
+\date{Novembro de 2026}
+
+\begin{document}
+\maketitle
+
+%% ====================================================================
+\section{Introdução}
+
+A base \emph{Dry Bean} \cite{koklu2020} reúne 13.611 grãos de feijão
+de sete variedades (Barbunya, Bombay, Cali, Dermason, Horoz, Seker e Sira),
+fotografados e processados por visão computacional. Cada grão é descrito por
+16 atributos numéricos de tamanho e forma extraídos da imagem (como área,
+perímetro, eixos maior e menor, excentricidade e fatores de forma), sem valores
+faltantes. As classes são desbalanceadas: Dermason (26,05\%), Sira (19,37\%),
+Seker (14,89\%), Horoz (14,17\%), Cali (11,98\%), Barbunya (9,71\%) e Bombay (3,84\%),
+o que motivou o uso do F1-macro como métrica principal.
+
+Escolhemos esta base por reunir propriedades úteis para estudar representação
+de dados: os atributos têm escalas muito distintas, há forte
+correlação entre vários deles
+e o número de amostras permite repetir os
+experimentos com validação cruzada. O objetivo não é identificar o classificador
+com maior acurácia, mas entender como mudanças na representação dos dados
+alteram o comportamento do KNN, do Naive Bayes e do SVM.
+
+Para atender ao enunciado, comparamos os três classificadores exigidos sob
+três das cinco estratégias de representação propostas: \emph{normalização/padronização}
+(H1), \emph{remoção de atributos redundantes} (H2) e \emph{PCA} (H3).
+Seleção de características e geração de novas características não foram utilizadas.
+
+Formulamos três hipóteses, cada uma apoiada em uma propriedade conhecida dos
+classificadores:
+
+\begin{itemize}
+  \item[H1.] A padronização ajuda muito o KNN e o SVM, mas quase não
+  muda o Naive Bayes. \emph{Mecanismo esperado:} KNN e SVM dependem de distâncias e
+  são dominados pelos atributos de maior escala; o Naive Bayes modela cada atributo
+  separadamente. \emph{Seria refutada se} o ganho do Naive Bayes fosse comparável ao
+  dos demais.
+  \item[H2.] Remover atributos redundantes ajuda o
+  Naive Bayes, mas quase não muda o KNN e o SVM. \emph{Mecanismo esperado:} atributos
+  correlacionados violam a independência assumida pelo Naive Bayes, ao passo que KNN
+  e SVM lidam melhor com redundância. \emph{Seria refutada se} a remoção
+  não melhorasse o Naive Bayes ou alterasse também o KNN e o SVM.
+  \item[H3.] Com o mesmo número de dimensões, o PCA mantém um desempenho
+  melhor do que a remoção de atributos correlacionados. \emph{Mecanismo esperado:}
+  o PCA combina todos os atributos e preserva a variância, enquanto a remoção
+  descarta atributos inteiros. \emph{Seria refutada se} a remoção igualasse ou
+  superasse o PCA para o mesmo número de dimensões.
+\end{itemize}
+
+%% ====================================================================
+\section{Metodologia}
+
+\paragraph{Classificadores.}
+Foram utilizados o KNN, o Naive Bayes gaussiano e o SVM com núcleo RBF, todos da
+biblioteca \texttt{scikit-learn} e com hiperparâmetros padrão
+(KNN com $k=5$; SVM com $C=1$ e $\gamma$ ``\texttt{scale}''). Não houve ajuste de
+hiperparâmetros, o que é uma limitação discutida na Seção~\ref{sec:concl}.
+
+\paragraph{Representações dos dados.}
+\begin{itemize}
+  \item H1 (escala): dados brutos, normalização Min--Max e
+  padronização (\emph{z-score}).
+  \item H2 (redundância): remoção de atributos por correlação de
+  Pearson, com limiares $|r| > 0{,}99$, $0{,}95$ e $0{,}90$, além da base completa
+  como referência.
+  \item H3 (PCA $\times$ remoção): PCA com o mesmo número de
+  dimensões que restou em cada limiar de remoção da H2, para comparar as duas
+  estratégias em igualdade de dimensão.
+\end{itemize}
+
+\paragraph{Protocolo experimental.}
+Utilizamos validação cruzada estratificada com 5 \emph{folds} e 3 repetições
+(15 execuções por configuração), com \texttt{random\_state}$=42$.
+Todas as transformações (escala, seleção e PCA) são ajustadas
+apenas nos dados de treino de cada \emph{fold}, dentro de um
+\texttt{Pipeline}, para evitar vazamento de informação.
+
+\paragraph{Métricas.}
+A métrica principal é o F1-macro, escolhida por causa do desbalanceamento
+entre as classes. Também reportamos a acurácia, o tempo de treino e predição e
+matrizes de confusão agregadas. Os resultados são apresentados como média
+$\pm$ desvio padrão das 15 execuções.
+
+%% ====================================================================
+\section{Resultados e Discussão}
+% Pessoas 1, 2, 3 (cada uma ~1/2 página) e Pessoa 5 (comparação geral).
+
+\section{Conclusão}\label{sec:concl}
+% Pessoa 5.
+
+%% ====================================================================
+\begin{thebibliography}{9}
+\bibitem{koklu2020}
+M.~Koklu and I.~A. Özkan.
+\newblock Multiclass classification of dry beans using computer vision and machine
+learning techniques.
+\newblock \emph{Computers and Electronics in Agriculture}, 174:105507, 2020.
+\end{thebibliography}
+
+\end{document}

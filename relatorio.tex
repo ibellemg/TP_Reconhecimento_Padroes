@@ -106,6 +106,45 @@ $\pm$ desvio padrão das 15 execuções.
 \section{Resultados e Discussão}
 % Pessoas 1, 2, 3 (cada uma ~1/2 página) e Pessoa 5 (comparação geral).
 
+\subsection{Impacto da escala dos atributos (H1)}
+
+A Tabela~\ref{tab:resultados_h1} resume o F1-macro (média $\pm$ desvio padrão nas 15 execuções) e o tempo médio de treino e predição sob dados brutos, 
+normalização Min-Max e padronização (\textit{z-score}).
+
+\begin{table}[htbp]
+    \centering
+    \caption{F1-macro ($\pm$ DP) e tempo médio de execução nas três representações da H1.}
+    \label{tab:resultados_h1}
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Classificador} & \textbf{Brutos} & \textbf{Min-Max} & \textbf{Padronizados} & \textbf{Ganho (\textit{z})} & \textbf{Tempo (bruto $\rightarrow$ \textit{z})} \\
+        \midrule
+        KNN & 72,70\% $\pm$ 0,91\% & 93,24\% $\pm$ 0,46\% & 93,51\% $\pm$ 0,56\% & +20,81 p.p. & 0,051s $\rightarrow$ 0,046s \\
+        SVM (RBF) & 59,62\% $\pm$ 0,74\% & 93,61\% $\pm$ 0,47\% & 94,02\% $\pm$ 0,49\% & +34,39 p.p. & 2,155s $\rightarrow$ 0,599s \\
+        Naive Bayes (padrão) & 76,50\% $\pm$ 0,89\% & 90,63\% $\pm$ 0,56\% & 90,63\% $\pm$ 0,56\% & +14,13 p.p. & 0,011s $\rightarrow$ 0,019s \\
+        Naive Bayes (\texttt{var\_smoothing=0}) & 90,63\% $\pm$ 0,56\% & 90,63\% $\pm$ 0,56\% & 90,63\% $\pm$ 0,56\% & 0,00 p.p. & 0,010s $\rightarrow$ 0,017s \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{KNN e SVM.}
+Os resultados confirmam a forte sensibilidade de modelos baseados em distância e produto interno à disparidade de escalas. Nos dados brutos, atributos de 
+grande magnitude (\texttt{Area}, \texttt{ConvexArea}) dominam a distância euclidiana no KNN e o núcleo RBF no SVM, anulando variáveis decimais (\texttt{ShapeFactor}). Com a padronização, o SVM saltou do pior para o melhor desempenho geral (+34,39 p.p., com acurácia de 92,89\%) e reduziu o tempo de execução em 3,6$\times$ devido ao melhor condicionamento numérico da otimização; o KNN ganhou +20,81 p.p.\ e reduziu sua variância entre \textit{folds} (DP de $\pm$0,91\% para $\pm$0,56\%). O \textit{z-score} superou ligeiramente o Min-Max em ambos. Nas matrizes de confusão agregadas, o SVM bruto falhou severamente em \textit{Barbunya} (6,2\% de acerto) e \textit{Seker} (26,4\%), que subiram para 90,4\% e 94,9\% após padronização, enquanto \textit{Bombay} permaneceu próxima a 100\% em todos os cenários e os erros residuais concentraram-se em \textit{Sira}/\textit{Dermason} e \textit{Barbunya}/\textit{Cali}.
+
+\paragraph{Naive Bayes e o efeito do \texttt{var\_smoothing}.}
+Teoricamente, o Naive Bayes gaussiano é invariante a transformações lineares de escala, pois modela cada atributo de forma independente. Contudo, na 
+configuração padrão do \texttt{scikit-learn}, o F1-macro saltou de 76,50\% para 90,63\% (+14,13 p.p.), aparentemente refutando a H1. A investigação mostrou 
+tratar-se de um artefato numérico do parâmetro padrão \texttt{var\_smoothing=1e-9}, que adiciona $10^{-9}$ da \textit{maior variância da base} (\texttt{Area}, 
+ordem de $10^8$) a todos os atributos para estabilidade numérica, distorcendo as gaussianas das variáveis de escala decimal. Ao desativar o parâmetro 
+(\texttt{var\_smoothing=0}), o modelo obteve exatamente 90,63\% $\pm$ 0,56\% de F1-macro e matrizes de confusão idênticas nas três representações.
+
+\paragraph{Avaliação da H1.}
+A hipótese é \textbf{confirmada} teoricamente: KNN e SVM dependem criticamente do escalonamento, ao passo que o Naive Bayes é intrinsecamente invariante à 
+escala. Na prática, porém, a padronização segue recomendável mesmo para o Naive Bayes no \texttt{scikit-learn}, pois neutraliza o viés numérico do 
+\texttt{var\_smoothing} em bases com variâncias muito heterogêneas.
+
 \section{Conclusão}\label{sec:concl}
 % Pessoa 5.
 

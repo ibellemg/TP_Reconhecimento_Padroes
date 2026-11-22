@@ -129,28 +129,22 @@ normalização Min-Max e padronização (\textit{z-score}).
     \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\textwidth]{resultados/H1/h1_comparacao_metricas.png}
-    \caption{F1-macro e acurácia (média $\pm$ DP) nas três representações da H1.}
-    \label{fig:h1}
-\end{figure}
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=\textwidth]{resultados/H1/h1_comparacao_metricas.png}
+%     \caption{F1-macro e acurácia (média $\pm$ DP) nas três representações da H1.}
+%     \label{fig:h1}
+% \end{figure}
 
-\paragraph{KNN e SVM.}
-Os resultados confirmam a forte sensibilidade de modelos baseados em distância e produto interno à disparidade de escalas. Nos dados brutos, atributos de 
-grande magnitude (\texttt{Area}, \texttt{ConvexArea}) dominam a distância euclidiana no KNN e o núcleo RBF no SVM, anulando variáveis decimais (\texttt{ShapeFactor}). Com a padronização, o SVM saltou do pior para o melhor desempenho geral (+34,39 p.p., com acurácia de 92,89\%) e reduziu o tempo de execução em 3,6$\times$ devido ao melhor condicionamento numérico da otimização; o KNN ganhou +20,81 p.p.\ e reduziu sua variância entre \textit{folds} (DP de $\pm$0,91\% para $\pm$0,56\%). O \textit{z-score} superou ligeiramente o Min-Max em ambos. Nas matrizes de confusão agregadas, o SVM bruto falhou severamente em \textit{Barbunya} (6,2\% de acerto) e \textit{Seker} (26,4\%), que subiram para 90,4\% e 94,9\% após padronização, enquanto \textit{Bombay} permaneceu próxima a 100\% em todos os cenários e os erros residuais concentraram-se em \textit{Sira}/\textit{Dermason} e \textit{Barbunya}/\textit{Cali}.
+\textbf{KNN e SVM.} Nos dados brutos, atributos de grande escala (\texttt{Area}, \texttt{ConvexArea}) dominam as distâncias e anulam variáveis decimais 
+(\texttt{ShapeFactor}). Com a padronização (\textit{z-score}, ligeiramente superior ao Min-Max), o SVM foi do pior ao melhor desempenho ($+34{,}39$~p.p. 
+e $3{,}6\times$ mais rápido), recuperando Barbunya ($6{,}2\% \rightarrow 90{,}4\%$) e Seker ($26{,}4\% \rightarrow 94{,}9\%$); o KNN ganhou $+20{,}81$~p.p. 
+com menor variância entre \textit{folds}.
 
-\paragraph{Naive Bayes e o efeito do \texttt{var\_smoothing}.}
-Teoricamente, o Naive Bayes gaussiano é invariante a transformações lineares de escala, pois modela cada atributo de forma independente. Contudo, na 
-configuração padrão do \texttt{scikit-learn}, o F1-macro saltou de 76,50\% para 90,63\% (+14,13 p.p.), aparentemente refutando a H1. A investigação mostrou 
-tratar-se de um artefato numérico do parâmetro padrão \texttt{var\_smoothing=1e-9}, que adiciona $10^{-9}$ da \textit{maior variância da base} (\texttt{Area}, 
-ordem de $10^8$) a todos os atributos para estabilidade numérica, distorcendo as gaussianas das variáveis de escala decimal. Ao desativar o parâmetro 
-(\texttt{var\_smoothing=0}), o modelo obteve exatamente 90,63\% $\pm$ 0,56\% de F1-macro e matrizes de confusão idênticas nas três representações.
-
-\paragraph{Avaliação da H1.}
-A hipótese é \textbf{confirmada} teoricamente: KNN e SVM dependem criticamente do escalonamento, ao passo que o Naive Bayes é intrinsecamente invariante à 
-escala. Na prática, porém, a padronização segue recomendável mesmo para o Naive Bayes no \texttt{scikit-learn}, pois neutraliza o viés numérico do 
-\texttt{var\_smoothing} em bases com variâncias muito heterogêneas.
+\textbf{Naive Bayes e avaliação da H1.} O ganho de $+14{,}13$~p.p. na configuração padrão do \texttt{scikit-learn} decorre de um artefato numérico do 
+\texttt{var\_smoothing=1e-9}, que soma $10^{-9}$ da maior variância (\texttt{Area}, $\sim 10^8$) a todos os atributos, distorcendo variáveis decimais. 
+Com \texttt{var\_smoothing=0}, o desempenho é idêntico nas três escalas ($90{,}63\% \pm 0{,}56\%$). A H1 é confirmada teoricamente, embora a padronização 
+siga recomendável na prática para neutralizar esse viés em bases com variâncias heterogêneas.
 
 \subsection{Remoção de atributos redundantes (H2)}
 % Pessoa 2. Inserir a figura da H2 como nas outras seções, por exemplo:

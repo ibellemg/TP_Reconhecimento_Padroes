@@ -1,0 +1,4 @@
+Classificador,Dados brutos (F1),Melhor H1,H1 F1,H1 ganho (p.p.),Melhor H3,H3 F1,H3 ganho (p.p.)
+KNN,72.70% ± 0.91%,padronizados,93.51% ± 0.56%,+20.81,PCA k=8,93.52% ± 0.56%,+20.82
+Naive Bayes,76.50% ± 0.89%,MinMax,90.63% ± 0.56%,+14.13,PCA k=6,91.42% ± 0.47%,+14.91
+SVM,59.62% ± 0.74%,padronizados,94.02% ± 0.49%,+34.39,remocao r>0.95,94.17% ± 0.41%,+34.55

@@ -10,9 +10,9 @@ Se algum CSV ainda não existir (ex.: H2), ele é pulado e o script roda com os 
 Gera em resultados/geral/:
     resultados_todos.csv          -> todos os CSVs concatenados (por fold)
     tabela_geral.csv              -> média ± DP de F1, acurácia e tempo por hipótese/representação/classificador
-    tabela_melhores.csv           -> por classificador: dados brutos e melhor representação de cada hipótese
+    tabela_melhores.csv           -> por classificador: brutos, padronizados e melhor representação de H2/H3
     tabela_melhores.tex           -> mesma tabela, pronta para \\input no relatório
-    geral_melhores_por_hipotese.png -> barras: brutos x melhor de cada hipótese
+    geral_melhores_por_hipotese.png -> barras: brutos x padronizados x melhor de H2/H3
     geral_heatmap_f1.png          -> F1 médio de todas as representações x classificadores
 
 Rodar a partir da raiz do repositório:
@@ -40,7 +40,8 @@ COLUNAS = ['hipotese', 'representacao', 'classificador', 'repeticao', 'fold',
 # Classificadores da comparação geral (a variante "Naive Bayes (var_smoothing=0)"
 # da H1 entra na tabela completa, mas não nos gráficos/tabela de melhores).
 ORDEM_CLF = ['KNN', 'Naive Bayes', 'SVM']
-REFERENCIA = ('H1', 'dados brutos')  # linha de base para calcular os ganhos
+REFERENCIA = ('H1', 'dados brutos')         # ponto de partida
+REFERENCIA_PADR = ('H1', 'padronizados')  # base para medir o efeito de H2 e H3
 
 plt.rcParams.update({'font.size': 11, 'figure.dpi': 150})
 
@@ -99,16 +100,25 @@ tabela_geral.to_csv(os.path.join(OUT_PATH, "tabela_geral.csv"), index=False)
 # ==============================================================================
 # 4. Melhores representações por hipótese (comparação geral)
 # ==============================================================================
+# Dados brutos e padronizados (H1) servem de referência. Como os pipelines de H2 e H3
+# padronizam os dados antes da remoção/PCA, o ganho dessas hipóteses é medido em
+# relação aos dados PADRONIZADOS (efeito próprio da técnica, sem o efeito da escala).
 base = geral[geral['classificador'].isin(ORDEM_CLF)]
+hips_tab = [h for h in hipoteses if h != 'H1']
+
+
+def pega(g, hip, rep):
+    r = g[(g['hipotese'] == hip) & (g['representacao'] == rep)]
+    return (r['f1_media'].iloc[0], r['f1_std'].iloc[0]) if len(r) else (np.nan, np.nan)
+
 
 linhas = []
 for clf in ORDEM_CLF:
     g = base[base['classificador'] == clf]
-    ref = g[(g['hipotese'] == REFERENCIA[0]) & (g['representacao'] == REFERENCIA[1])]
-    ref_f1 = ref['f1_media'].iloc[0] if len(ref) else np.nan
-    linha = {'classificador': clf, 'brutos_f1': ref_f1,
-             'brutos_std': ref['f1_std'].iloc[0] if len(ref) else np.nan}
-    for hip in hipoteses:
+    linha = {'classificador': clf}
+    linha['brutos_f1'], linha['brutos_std'] = pega(g, *REFERENCIA)
+    linha['padr_f1'], linha['padr_std'] = pega(g, *REFERENCIA_PADR)
+    for hip in hips_tab:
         gh = g[g['hipotese'] == hip]
         if gh.empty:
             continue
@@ -116,21 +126,26 @@ for clf in ORDEM_CLF:
         linha[f'{hip}_rep'] = melhor['representacao']
         linha[f'{hip}_f1'] = melhor['f1_media']
         linha[f'{hip}_std'] = melhor['f1_std']
-        linha[f'{hip}_ganho_pp'] = melhor['f1_media'] - ref_f1
+        linha[f'{hip}_ganho_pp'] = melhor['f1_media'] - linha['padr_f1']
     linhas.append(linha)
 melhores = pd.DataFrame(linhas)
+hips_tab = [h for h in hips_tab if f'{h}_rep' in melhores]
 
-# CSV legível
-tab_melhores = pd.DataFrame({'Classificador': melhores['classificador'],
-                             'Dados brutos (F1)': [f"{m:.2f}% ± {s:.2f}%" for m, s in
-                                                   zip(melhores['brutos_f1'], melhores['brutos_std'])]})
-for hip in hipoteses:
-    if f'{hip}_rep' not in melhores:
-        continue
+
+def fmt(m, s):
+    return f"{m:.2f}% ± {s:.2f}%"
+
+
+tab_melhores = pd.DataFrame({
+    'Classificador': melhores['classificador'],
+    'Dados brutos (F1)': [fmt(m, s) for m, s in zip(melhores['brutos_f1'], melhores['brutos_std'])],
+    'Padronizados (F1)': [fmt(m, s) for m, s in zip(melhores['padr_f1'], melhores['padr_std'])],
+    'Ganho da padronização (p.p.)': [f"{p - b:+.2f}" for p, b in zip(melhores['padr_f1'], melhores['brutos_f1'])],
+})
+for hip in hips_tab:
     tab_melhores[f'Melhor {hip}'] = melhores[f'{hip}_rep']
-    tab_melhores[f'{hip} F1'] = [f"{m:.2f}% ± {s:.2f}%" for m, s in
-                                 zip(melhores[f'{hip}_f1'], melhores[f'{hip}_std'])]
-    tab_melhores[f'{hip} ganho (p.p.)'] = [f"{g:+.2f}" for g in melhores[f'{hip}_ganho_pp']]
+    tab_melhores[f'{hip} F1'] = [fmt(m, s) for m, s in zip(melhores[f'{hip}_f1'], melhores[f'{hip}_std'])]
+    tab_melhores[f'{hip} vs padronizados (p.p.)'] = [f"{g:+.2f}" for g in melhores[f'{hip}_ganho_pp']]
 tab_melhores.to_csv(os.path.join(OUT_PATH, "tabela_melhores.csv"), index=False)
 
 
@@ -139,34 +154,41 @@ def br(x, casas=2):
     return f"{x:.{casas}f}".replace('.', ',')
 
 
+def sinal(x):
+    return ('+' if x >= 0 else '') + br(x)
+
+
 def tex_escape(s):
     return (str(s).replace('\\', r'\textbackslash{}').replace('_', r'\_')
-            .replace('%', r'\%').replace('>', r'$>$').replace('&', r'\&'))
+            .replace('%', r'\%').replace('>', r'$>$').replace('&', r'\&')
+            .replace('remocao', 'remoção').replace('.', '{,}'))
 
 
-hips_tab = [h for h in hipoteses if f'{h}_rep' in melhores]
 tex = [r"\begin{table}[htbp]", r"    \centering",
-       r"    \caption{F1-macro (\%) nos dados brutos e na melhor representação de cada hipótese "
-       r"(entre parênteses, ganho em p.p.\ sobre os dados brutos).}",
+       r"    \caption{F1-macro (\%) médio por classificador: dados brutos, dados padronizados e melhor "
+       r"representação de " + " e ".join(hips_tab) + r". Entre parênteses: na coluna Padronizados, ganho "
+       r"sobre os dados brutos; nas demais, diferença em relação aos padronizados (p.p.).}",
        r"    \label{tab:comparacao_geral}", r"    \footnotesize",
-       r"    \begin{tabular}{l" + "c" * (1 + len(hips_tab)) + "}", r"        \toprule",
-       "        \\textbf{Classificador} & \\textbf{Brutos} & "
+       r"    \begin{tabular}{l" + "c" * (2 + len(hips_tab)) + "}", r"        \toprule",
+       "        \\textbf{Classificador} & \\textbf{Brutos} & \\textbf{Padronizados} & "
        + " & ".join(f"\\textbf{{Melhor {h}}}" for h in hips_tab) + r" \\",
        r"        \midrule"]
 for _, l in melhores.iterrows():
-    celulas = [l['classificador'], br(l['brutos_f1'])]
+    celulas = [l['classificador'], br(l['brutos_f1']),
+               f"{br(l['padr_f1'])} ({sinal(l['padr_f1'] - l['brutos_f1'])})"]
     for h in hips_tab:
-        celulas.append(f"\\shortstack{{{br(l[f'{h}_f1'])} ({'+' if l[f'{h}_ganho_pp'] >= 0 else ''}"
-                       f"{br(l[f'{h}_ganho_pp'])})\\\\\\scriptsize {tex_escape(l[f'{h}_rep'])}}}")
+        celulas.append(f"{br(l[f'{h}_f1'])} ({sinal(l[f'{h}_ganho_pp'])}) "
+                       f"\\scriptsize[{tex_escape(l[f'{h}_rep'])}]")
     tex.append("        " + " & ".join(celulas) + r" \\")
 tex += [r"        \bottomrule", r"    \end{tabular}", r"\end{table}"]
 with open(os.path.join(OUT_PATH, "tabela_melhores.tex"), "w", encoding="utf-8") as f:
     f.write("\n".join(tex) + "\n")
 
 # ==============================================================================
-# 5. Figura 1: dados brutos x melhor representação de cada hipótese
+# 5. Figura 1: dados brutos x padronizados x melhor representação de H2/H3
 # ==============================================================================
-grupos = [('Dados brutos', 'brutos')] + [(f'Melhor {h}', h) for h in hips_tab]
+grupos = [('Dados brutos', 'brutos'), ('Padronizados (H1)', 'padr')] + \
+         [(f'Melhor {h}', h) for h in hips_tab]
 cores = ['#9e9e9e', '#4c72b0', '#dd8452', '#55a868', '#c44e52'][:len(grupos)]
 x = np.arange(len(ORDEM_CLF))
 largura = 0.8 / len(grupos)
@@ -181,15 +203,16 @@ for i, (rotulo, chave) in enumerate(grupos):
     for j, b in enumerate(barras):
         ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 1.0, f"{medias[j]:.1f}",
                 ha='center', va='bottom', fontsize=8)
-        if chave != 'brutos':  # nome da representação escolhida dentro da barra
-            ax.text(b.get_x() + b.get_width() / 2, 52, melhores[f'{chave}_rep'].iloc[j],
+        if chave in hips_tab:  # nome da representação escolhida dentro da barra
+            ax.text(b.get_x() + b.get_width() / 2, 52,
+                    melhores[f'{chave}_rep'].iloc[j].replace('remocao', 'remoção'),
                     ha='center', va='bottom', rotation=90, fontsize=7, color='white')
 
 ax.set_xticks(x)
 ax.set_xticklabels(ORDEM_CLF)
 ax.set_ylabel('F1-macro (%)')
 ax.set_ylim(50, 100)
-ax.set_title('Dados brutos x melhor representação de cada hipótese')
+ax.set_title('Dados brutos, padronizados e melhor representação de cada hipótese')
 ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=len(grupos), frameon=False)
 fig.tight_layout()
 fig.savefig(os.path.join(OUT_PATH, "geral_melhores_por_hipotese.png"), bbox_inches='tight')

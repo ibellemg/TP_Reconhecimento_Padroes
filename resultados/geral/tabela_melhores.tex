@@ -1,15 +1,15 @@
 \begin{table}[htbp]
     \centering
-    \caption{F1-macro (\%) nos dados brutos e na melhor representação de cada hipótese (entre parênteses, ganho em p.p.\ sobre os dados brutos).}
+    \caption{F1-macro (\%) médio por classificador: dados brutos, dados padronizados e melhor representação de H3. Entre parênteses: na coluna Padronizados, ganho sobre os dados brutos; nas demais, diferença em relação aos padronizados (p.p.).}
     \label{tab:comparacao_geral}
     \footnotesize
     \begin{tabular}{lccc}
         \toprule
-        \textbf{Classificador} & \textbf{Brutos} & \textbf{Melhor H1} & \textbf{Melhor H3} \\
+        \textbf{Classificador} & \textbf{Brutos} & \textbf{Padronizados} & \textbf{Melhor H3} \\
         \midrule
-        KNN & 72,70 & \shortstack{93,51 (+20,81)\\\scriptsize padronizados} & \shortstack{93,52 (+20,82)\\\scriptsize PCA k=8} \\
-        Naive Bayes & 76,50 & \shortstack{90,63 (+14,13)\\\scriptsize MinMax} & \shortstack{91,42 (+14,91)\\\scriptsize PCA k=6} \\
-        SVM & 59,62 & \shortstack{94,02 (+34,39)\\\scriptsize padronizados} & \shortstack{94,17 (+34,55)\\\scriptsize remocao r$>$0.95} \\
+        KNN & 72,70 & 93,51 (+20,81) & 93,52 (+0,01) \scriptsize[PCA k=8] \\
+        Naive Bayes & 76,50 & 90,63 (+14,13) & 91,42 (+0,78) \scriptsize[PCA k=6] \\
+        SVM & 59,62 & 94,02 (+34,39) & 94,17 (+0,16) \scriptsize[remoção r$>$0{,}95] \\
         \bottomrule
     \end{tabular}
 \end{table}

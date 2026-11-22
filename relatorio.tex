@@ -15,7 +15,7 @@
 
 \title{O impacto da representação dos dados no desempenho de classificadores:
 um estudo com a base \emph{Dry Bean}}
-\author{ Arthur Andrade, Thiago Fraga, Wagner, Isabelle, Fernanda\\
+\author{Arthur Andrade, Fernanda Cruz, Isabelle Gonçalves, Thiago Fraga, Wagner Duarte\\
 Introdução ao Reconhecimento de Padrões --- UFMG}
 \date{Novembro de 2026}
 
@@ -129,6 +129,13 @@ normalização Min-Max e padronização (\textit{z-score}).
     \end{tabular}
 \end{table}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{resultados/H1/h1_comparacao_metricas.png}
+    \caption{F1-macro e acurácia (média $\pm$ DP) nas três representações da H1.}
+    \label{fig:h1}
+\end{figure}
+
 \paragraph{KNN e SVM.}
 Os resultados confirmam a forte sensibilidade de modelos baseados em distância e produto interno à disparidade de escalas. Nos dados brutos, atributos de 
 grande magnitude (\texttt{Area}, \texttt{ConvexArea}) dominam a distância euclidiana no KNN e o núcleo RBF no SVM, anulando variáveis decimais (\texttt{ShapeFactor}). Com a padronização, o SVM saltou do pior para o melhor desempenho geral (+34,39 p.p., com acurácia de 92,89\%) e reduziu o tempo de execução em 3,6$\times$ devido ao melhor condicionamento numérico da otimização; o KNN ganhou +20,81 p.p.\ e reduziu sua variância entre \textit{folds} (DP de $\pm$0,91\% para $\pm$0,56\%). O \textit{z-score} superou ligeiramente o Min-Max em ambos. Nas matrizes de confusão agregadas, o SVM bruto falhou severamente em \textit{Barbunya} (6,2\% de acerto) e \textit{Seker} (26,4\%), que subiram para 90,4\% e 94,9\% após padronização, enquanto \textit{Bombay} permaneceu próxima a 100\% em todos os cenários e os erros residuais concentraram-se em \textit{Sira}/\textit{Dermason} e \textit{Barbunya}/\textit{Cali}.
@@ -145,8 +152,87 @@ A hipótese é \textbf{confirmada} teoricamente: KNN e SVM dependem criticamente
 escala. Na prática, porém, a padronização segue recomendável mesmo para o Naive Bayes no \texttt{scikit-learn}, pois neutraliza o viés numérico do 
 \texttt{var\_smoothing} em bases com variâncias muito heterogêneas.
 
+\subsection{Remoção de atributos redundantes (H2)}
+% Pessoa 2. Inserir a figura da H2 como nas outras seções, por exemplo:
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=\textwidth]{resultados/H2/NOME_DA_FIGURA.png}
+%     \caption{...}
+%     \label{fig:h2}
+% \end{figure}
+
+\subsection{PCA $\times$ remoção de atributos com a mesma dimensão (H3)}
+% Pessoa 3. Figura já inserida; escrever a análise abaixo dela.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{resultados/H3/h3_f1_por_dimensao.png}
+    \caption{F1-macro em função do número de dimensões: PCA (linha) e remoção por
+    correlação (quadrados). A linha tracejada indica os 16 atributos padronizados.}
+    \label{fig:h3}
+\end{figure}
+
+%% ---------------------------------------------------------------------
+\subsection{Comparação geral}\label{sec:geral}
+% Pessoa 5. Tabela gerada por codigos/comparacao_geral.py
+% (rodar de novo quando a H2 existir: a coluna "Melhor H2" entra sozinha).
+
+\input{resultados/geral/tabela_melhores.tex}
+
+A Tabela~\ref{tab:comparacao_geral} reúne, para cada classificador, os dados brutos,
+os dados padronizados e a melhor representação obtida nas demais hipóteses. Como os
+\emph{pipelines} da H2 e da H3 padronizam os dados antes da remoção ou do PCA, o efeito
+próprio dessas técnicas é medido em relação aos dados padronizados, e não aos brutos.
+
+O quadro revela uma hierarquia clara. A escala dos atributos é, de longe, o fator
+dominante: a padronização eleva o F1-macro em 14 a 34~p.p. Uma vez padronizados os
+dados, a redução de dimensionalidade altera o desempenho em menos de 1~p.p. O Naive
+Bayes é o único com ganho perceptível (+0,78~p.p.\ com PCA de 6 componentes), o que é
+coerente com a violação da independência condicional pelos atributos correlacionados;
+para o KNN e o SVM, as diferenças ($\leq$0,16~p.p.) são menores que um desvio padrão
+entre \emph{folds}. Por outro lado, a base admite forte compressão: com apenas 6
+componentes principais, nenhum classificador perde mais de 0,25~p.p.\ em relação
+aos 16 atributos padronizados.
+\textcolor{red}{[Completar com a H2 quando os resultados estiverem prontos.]}
+
+Por fim, a representação pesou mais do que a escolha do classificador: nos dados brutos,
+o F1-macro varia de 59,6\% (SVM) a 76,5\% (Naive Bayes), uma diferença de 17~p.p.\ e com
+o SVM em último lugar; após a padronização, os três ficam a menos de 3,5~p.p.\ entre si
+e o SVM passa ao primeiro lugar.
+
+%% ====================================================================
 \section{Conclusão}\label{sec:concl}
 % Pessoa 5.
+
+Este trabalho investigou como a representação dos dados afeta o KNN, o Naive Bayes e o
+SVM na base \emph{Dry Bean}. As hipóteses foram avaliadas da seguinte forma:
+
+\begin{itemize}
+  \item \textbf{H1 (confirmada):} a padronização foi decisiva para o KNN
+  (+20,8~p.p.) e o SVM (+34,4~p.p.). O Naive Bayes só variou por um artefato
+  numérico do \texttt{var\_smoothing}; sem ele, seu desempenho foi idêntico nas três
+  representações.
+  \item \textbf{H2:} \textcolor{red}{[completar após os resultados da H2].}
+  \item \textbf{H3 (parcialmente confirmada):} o PCA superou a remoção apenas na
+  redução mais agressiva (7 dimensões), para o KNN (+0,89~p.p.) e o Naive Bayes
+  (+1,06~p.p.), em 15 de 15 \emph{folds} (Wilcoxon, $p<0{,}001$). Com 9 e 13 dimensões,
+  a vantagem do PCA no KNN caiu para no máximo 0,11~p.p.\ e se inverteu no Naive Bayes
+  (remoção melhor em até 0,98~p.p.); no SVM, as diferenças ficaram abaixo de 0,2~p.p. Ou seja, a vantagem do PCA só aparece quando a remoção precisa descartar
+  atributos informativos.
+\end{itemize}
+
+A principal descoberta é que, nesta base, o pré-processamento de escala importa mais
+do que a escolha do classificador ou a redução de dimensionalidade.
+
+\paragraph{Limitações.}
+(i) Todos os classificadores usaram hiperparâmetros padrão; um ajuste de $k$, $C$ e
+$\gamma$ poderia alterar a ordem entre eles e a sensibilidade a cada representação.
+(ii) Foi usada uma única base, cujos atributos geométricos são fortemente
+correlacionados entre si, o que limita a generalização das conclusões.
+(iii) A remoção por correlação é gulosa e depende da ordem dos atributos.
+(iv) Várias diferenças observadas após a padronização são menores que 1~p.p., da
+ordem do desvio padrão entre \emph{folds}, e só a H3 foi acompanhada de teste
+estatístico.
 
 %% ====================================================================
 \begin{thebibliography}{9}

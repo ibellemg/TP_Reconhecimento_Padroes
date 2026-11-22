@@ -9,3 +9,10 @@ relatorio.fls
 relatorio.log
 relatorio.out
 relatorio.synctex.gzvenv/
+venv/
+*.aux
+*.log
+*.out
+*.nav
+*.snm
+*.toc

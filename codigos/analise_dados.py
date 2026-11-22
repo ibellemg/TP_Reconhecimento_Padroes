@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
@@ -155,7 +155,7 @@ X = df_beans.drop(columns=['Class'])
 y = df_beans['Class']
 classes = sorted(y.unique())
 
-skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=42)
 
 modelos = {
     'KNN': KNeighborsClassifier(),

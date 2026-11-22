@@ -1,0 +1,6 @@
+representacao,n_atributos,conjuntos_diferentes_entre_folds,atributos_mantidos,atributos_removidos
+remocao r>0.99,13,1,Area;Perimeter;MajorAxisLength;MinorAxisLength;AspectRation;Eccentricity;Extent;Solidity;roundness;Compactness;ShapeFactor1;ShapeFactor2;ShapeFactor4,ConvexArea;EquivDiameter;ShapeFactor3
+remocao r>0.95,9,1,Area;AspectRation;Eccentricity;Extent;Solidity;roundness;ShapeFactor1;ShapeFactor2;ShapeFactor4,Perimeter;MajorAxisLength;MinorAxisLength;ConvexArea;EquivDiameter;Compactness;ShapeFactor3
+remocao r>0.90,7,1,Area;AspectRation;Extent;Solidity;roundness;ShapeFactor2;ShapeFactor4,Perimeter;MajorAxisLength;MinorAxisLength;Eccentricity;ConvexArea;EquivDiameter;Compactness;ShapeFactor1;ShapeFactor3
+remocao sequencial r>0.95,10,1,Area;MajorAxisLength;AspectRation;Eccentricity;Extent;Solidity;roundness;ShapeFactor1;ShapeFactor2;ShapeFactor4,Perimeter;MinorAxisLength;ConvexArea;EquivDiameter;Compactness;ShapeFactor3
+remocao sequencial r>0.90,8,1,Area;AspectRation;Extent;Solidity;roundness;ShapeFactor1;ShapeFactor2;ShapeFactor4,Perimeter;MajorAxisLength;MinorAxisLength;Eccentricity;ConvexArea;EquivDiameter;Compactness;ShapeFactor3

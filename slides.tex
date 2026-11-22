@@ -168,6 +168,8 @@ no desempenho de classificadores}
     \item Métrica principal: \textbf{F1-macro}, por causa do desbalanceamento
     \item Também: acurácia, tempo e matrizes de confusão
     \item Resultados como média $\pm$ desvio padrão
+    \item Mesmas divisões para tudo: comparação pareada por \emph{fold}
+      ($t$ corrigido na H2, Wilcoxon na H3)
   \end{itemize}
 \end{frame}
 
@@ -207,21 +209,29 @@ no desempenho de classificadores}
 
 \begin{frame}{H2: remoção de atributos redundantes}
   % Pessoa 2
-  \pendente{Figura da H2: F1 por limiar de correlação (sem remoção, 0,99, 0,95, 0,90)}
-  % \centering
-  % \includegraphics[width=\textwidth]{resultados/H2/NOME_DA_FIGURA.png}
+  \centering
+  \includegraphics[width=\textwidth]{resultados/H2/h2_efeito_remocao.png}
+
+  \small Diferença no F1-macro em relação aos 16 atributos padronizados, pareada por \emph{fold}
+  (* $p<0{,}05$, teste $t$ corrigido).
 \end{frame}
 
 \begin{frame}{H2: resultados e avaliação}
   % Pessoa 2
+  \centering
+  \numero{+0,75}{p.p.\ no Naive Bayes\\($|r|>0{,}95$, 15/15 \emph{folds})}\hfill
+  \numero{+1,43}{p.p.\ no Naive Bayes\\(sem remoção em cadeia)}\hfill
+  \numero{$\leq$0,18}{p.p.\ no KNN e no SVM\\(sem significância)}
+
+  \vspace{0.8em}
+  \raggedright
   \begin{itemize}
-    \item \pendente{Quantos atributos sobram em cada limiar}
-    \item \pendente{Efeito no Naive Bayes}
-    \item \pendente{Efeito no KNN e no SVM}
+    \item O Naive Bayes conta o tamanho 6$\times$ e abafa a forma: o ganho vem do par Barbunya/Cali
+    \item Remoção aleatória do mesmo tamanho piora (em média, até 2,7 p.p.): a regra tira só redundância
+    \item Em $|r|>0{,}90$ o KNN perde 0,99 p.p.: \texttt{ShapeFactor1} sai \alert{em cadeia}
   \end{itemize}
-  \vfill
   \begin{block}{Avaliação}
-    \pendente{H2 confirmada / refutada / parcialmente confirmada}
+    H2 \textbf{confirmada}, com efeito pequeno (da ordem do desvio entre \emph{folds}).
   \end{block}
 \end{frame}
 
@@ -257,7 +267,8 @@ no desempenho de classificadores}
     \item Com menos remoção, a vantagem some ou se inverte; no SVM tudo fica abaixo de 0,2 p.p.
   \end{itemize}
   \begin{block}{Avaliação}
-    H3 \textbf{parcialmente confirmada}: o PCA só ajuda quando a remoção descarta atributos informativos.
+    H3 \textbf{parcialmente confirmada}: o PCA só ajuda quando a remoção descarta atributos informativos
+    (com 7 dimensões, \texttt{ShapeFactor1} sai \alert{em cadeia}; sem isso, a remoção empata ou vence).
   \end{block}
 \end{frame}
 
@@ -276,8 +287,9 @@ no desempenho de classificadores}
       \small
       \begin{itemize}
         \item Escala: ganho de \textbf{14 a 34 p.p.}
-        \item Depois de padronizar, PCA e remoção mudam \textbf{menos de 1 p.p.}
-        \item Só o Naive Bayes ganha algo (+0,8 p.p.)
+        \item Depois de padronizar, PCA e remoção mudam \textbf{no máximo 1,4 p.p.}
+        \item Só o Naive Bayes ganha algo: +1,4 p.p.\ tirando redundância (H2), +0,8 p.p.\ com PCA (H3)
+        \item Remoção aleatória piora: o ganho vem da \textbf{redundância}
         \item 6 componentes bastam: perda $\leq$ 0,25 p.p.
       \end{itemize}
     \end{column}
@@ -287,18 +299,20 @@ no desempenho de classificadores}
 \begin{frame}{Conclusão}
   % Pessoa 5
   \begin{itemize}
-    \item \textbf{H1 confirmada} \quad \textbf{H2} \pendente{completar} \quad
+    \item \textbf{H1 confirmada} \quad \textbf{H2 confirmada} \quad
       \textbf{H3 parcialmente confirmada}
     \item A \textbf{representação pesou mais que o classificador}:
       \begin{itemize}
         \item dados brutos: 17 p.p.\ entre o melhor e o pior (SVM em último)
         \item padronizados: menos de 3,5 p.p.\ entre os três (SVM em primeiro)
       \end{itemize}
+    \item Depois da escala, o maior ganho é do Naive Bayes ao tirar \textbf{atributos repetidos}
+      (+1,4 p.p.)
   \end{itemize}
   \vfill
   \begin{block}{Limitações}
-    Hiperparâmetros padrão $\cdot$ uma única base $\cdot$ remoção gulosa por correlação
-    $\cdot$ diferenças $<1$ p.p.\ da ordem do desvio entre \emph{folds}
+    Hiperparâmetros padrão $\cdot$ uma única base $\cdot$ regra de remoção depende da ordem
+    e remove em cadeia $\cdot$ diferenças $<1{,}5$ p.p.\ da ordem do desvio entre \emph{folds}
   \end{block}
 \end{frame}
 

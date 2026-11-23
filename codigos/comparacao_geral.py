@@ -120,6 +120,10 @@ for clf in ORDEM_CLF:
     linha['padr_f1'], linha['padr_std'] = pega(g, *REFERENCIA_PADR)
     for hip in hips_tab:
         gh = g[g['hipotese'] == hip]
+        if hip == 'H3':
+            # O CSV da H3 também tem as remoções usadas como comparação; a melhor
+            # representação da H3 deve ser escolhida só entre as de PCA.
+            gh = gh[gh['representacao'].str.startswith('PCA')]
         if gh.empty:
             continue
         melhor = gh.loc[gh['f1_media'].idxmax()]

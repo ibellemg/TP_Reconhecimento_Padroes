@@ -169,7 +169,7 @@ no desempenho de classificadores}
     \item Também: acurácia, tempo e matrizes de confusão
     \item Resultados como média $\pm$ desvio padrão
     \item Mesmas divisões para tudo: comparação pareada por \emph{fold}
-      ($t$ corrigido na H2, Wilcoxon na H3)
+      (teste $t$ corrigido de Nadeau e Bengio na H2 e na H3)
   \end{itemize}
 \end{frame}
 
@@ -198,7 +198,8 @@ no desempenho de classificadores}
     \item O ganho de +14,1 p.p.\ do Naive Bayes padrão é um \alert{artefato do \texttt{var\_smoothing}}
   \end{itemize}
   \begin{block}{Avaliação}
-    H1 \textbf{confirmada}: KNN e SVM dependem da escala; o Naive Bayes é invariante a ela.
+    H1 \textbf{confirmada} (isolado o artefato do \texttt{var\_smoothing}): KNN e SVM dependem da escala;
+    o Naive Bayes é invariante a ela.
   \end{block}
 \end{frame}
 
@@ -231,7 +232,8 @@ no desempenho de classificadores}
     \item Em $|r|>0{,}90$ o KNN perde 0,99 p.p.: \texttt{ShapeFactor1} sai \alert{em cadeia}
   \end{itemize}
   \begin{block}{Avaliação}
-    H2 \textbf{confirmada}, com efeito pequeno (da ordem do desvio entre \emph{folds}).
+    H2 \textbf{confirmada} em $|r|>0{,}99$ e $0{,}95$ e refutada em $0{,}90$, com efeito pequeno
+    (da ordem do desvio entre \emph{folds}).
   \end{block}
 \end{frame}
 
@@ -263,8 +265,9 @@ no desempenho de classificadores}
 
   \raggedright
   \begin{itemize}
-    \item Com 7 dimensões, o PCA vence em 15/15 \emph{folds} no KNN e no NB (Wilcoxon, $p<0{,}001$)
-    \item Com menos remoção, a vantagem some ou se inverte; no SVM tudo fica abaixo de 0,2 p.p.
+    \item Com 7 dimensões, o PCA vence em 15/15 \emph{folds} no KNN e no NB ($t$ corrigido, $p<0{,}001$)
+    \item Com menos remoção, a vantagem some ou se inverte (NB com 13 dim.: remoção melhor, $p<0{,}01$);
+      no SVM tudo fica abaixo de 0,2 p.p.
   \end{itemize}
   \begin{block}{Avaliação}
     H3 \textbf{parcialmente confirmada}: o PCA só ajuda quando a remoção descarta atributos informativos
@@ -286,8 +289,9 @@ no desempenho de classificadores}
     \begin{column}{0.36\textwidth}
       \small
       \begin{itemize}
-        \item Escala: ganho de \textbf{14 a 34 p.p.}
-        \item Depois de padronizar, PCA e remoção mudam \textbf{no máximo 1,4 p.p.}
+        \item Escala: ganho de \textbf{21 a 34 p.p.}\ no KNN e no SVM
+        \item Depois de padronizar, reduções que preservam a informação mudam \textbf{no máximo 1,4 p.p.}
+          (com $k\leq4$, perda de 3,6 a 8,6 p.p.)
         \item Só o Naive Bayes ganha algo: +1,4 p.p.\ tirando redundância (H2), +0,8 p.p.\ com PCA (H3)
         \item Remoção aleatória piora: o ganho vem da \textbf{redundância}
         \item 6 componentes bastam: perda $\leq$ 0,25 p.p.
@@ -299,7 +303,7 @@ no desempenho de classificadores}
 \begin{frame}{Conclusão}
   % Pessoa 5
   \begin{itemize}
-    \item \textbf{H1 confirmada} \quad \textbf{H2 confirmada} \quad
+    \item \textbf{H1 confirmada} \quad \textbf{H2 confirmada} (0,99 e 0,95) \quad
       \textbf{H3 parcialmente confirmada}
     \item A \textbf{representação pesou mais que o classificador}:
       \begin{itemize}

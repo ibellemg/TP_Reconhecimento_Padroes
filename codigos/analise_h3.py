@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import wilcoxon
+from scipy.stats import wilcoxon, t as dist_t
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -74,7 +74,22 @@ tabela_resumo.to_csv(os.path.join(RESULTS_PATH, "tabela_resumo_H3.csv"), index=F
 # ==============================================================================
 # 4. TABELA PRINCIPAL: PCA × remoção com o mesmo número de dimensões
 #    Comparação pareada fold a fold (mesmas divisões, random_state=42).
+#    Teste principal: t corrigido de Nadeau e Bengio (2003), o mesmo da H2. Ele
+#    considera que os folds não são independentes (os treinos se sobrepõem).
+#    O Wilcoxon fica só como referência (ignora essa dependência, p otimista).
 # ==============================================================================
+N_TESTE_SOBRE_TREINO = 1 / 4  # 5 folds: teste = 1/5 da base, treino = 4/5
+
+
+def t_corrigido(dif):
+    n = len(dif)
+    var_corrigida = (1 / n + N_TESTE_SOBRE_TREINO) * dif.var(ddof=1)
+    if var_corrigida == 0:
+        return np.nan, np.nan
+    t = dif.mean() / np.sqrt(var_corrigida)
+    return t, 2 * dist_t.sf(abs(t), n - 1)
+
+
 linhas = []
 for rep_rem, k in n_remocao.items():
     rep_pca = f'PCA k={k}'
@@ -90,6 +105,7 @@ for rep_rem, k in n_remocao.items():
             p = wilcoxon(dif).pvalue
         except ValueError:
             p = np.nan  # todas as diferenças iguais a zero
+        t_c, p_c = t_corrigido(dif)
         linhas.append({
             'classificador': clf,
             'dimensoes': k,
@@ -99,7 +115,9 @@ for rep_rem, k in n_remocao.items():
             'diferença PCA - remoção (p.p.)': dif.mean(),
             'desvio da diferença (p.p.)': dif.std(),
             'folds com PCA melhor': f"{(dif > 0).sum()}/{len(dif)}",
-            'p-valor Wilcoxon': p
+            't corrigido': t_c,
+            'p t corrigido': p_c,
+            'p Wilcoxon': p
         })
 
 tabela_comp = pd.DataFrame(linhas).sort_values(['classificador', 'dimensoes'])

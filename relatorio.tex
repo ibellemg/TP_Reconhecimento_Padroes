@@ -25,85 +25,44 @@ Introdução ao Reconhecimento de Padrões --- UFMG}
 %% ====================================================================
 \section{Introdução}
 
-A base \emph{Dry Bean} \cite{koklu2020} reúne 13.611 grãos de feijão
-de sete variedades (Barbunya, Bombay, Cali, Dermason, Horoz, Seker e Sira),
-fotografados e processados por visão computacional. Cada grão é descrito por
-16 atributos numéricos de tamanho e forma extraídos da imagem (como área,
-perímetro, eixos maior e menor, excentricidade e fatores de forma), sem valores
-faltantes. As classes são desbalanceadas: Dermason (26,05\%), Sira (19,37\%),
-Seker (14,89\%), Horoz (14,17\%), Cali (11,98\%), Barbunya (9,71\%) e Bombay (3,84\%),
-o que motivou o uso do F1-macro como métrica principal.
+A base \textit{Dry Bean}~\cite{koklu2020} reúne 13.611 grãos de sete variedades (Barbunya, Bombay, Cali, Dermason, Horoz, Seker e Sira), descritos por 16 
+atributos numéricos de tamanho e forma extraídos por visão computacional, sem valores faltantes. As classes são desbalanceadas, variando de 3{,}84\% (Bombay) 
+a 26{,}05\% (Dermason), o que motivou o uso do F1-macro como métrica principal.
 
-Escolhemos esta base por reunir propriedades úteis para estudar representação
-de dados: os atributos têm escalas muito distintas, há forte
-correlação entre vários deles
-e o número de amostras permite repetir os
-experimentos com validação cruzada. O objetivo não é identificar o classificador
-com maior acurácia, mas entender como mudanças na representação dos dados
-alteram o comportamento do KNN, do Naive Bayes e do SVM.
-
-Para atender ao enunciado, comparamos os três classificadores exigidos sob
-três das cinco estratégias de representação propostas: \emph{normalização/padronização}
-(H1), \emph{remoção de atributos redundantes} (H2) e \emph{PCA} (H3).
-Seleção de características e geração de novas características não foram utilizadas.
-
-Formulamos três hipóteses, cada uma apoiada em uma propriedade conhecida dos
-classificadores:
+A base foi escolhida por reunir atributos em escalas muito distintas, forte correlação entre variáveis e volume adequado para validação cruzada repetida. O 
+objetivo não é maximizar a acurácia, mas compreender como três estratégias de representação -- escalonamento (H1), remoção de atributos redundantes (H2) e 
+PCA (H3) -- alteram o comportamento do KNN, do Naive Bayes e do SVM (seleção supervisionada e geração de atributos não foram utilizadas). Formulamos três 
+hipóteses:
 
 \begin{itemize}
-  \item[H1.] A padronização ajuda muito o KNN e o SVM, mas quase não
-  muda o Naive Bayes. \emph{Mecanismo esperado:} KNN e SVM dependem de distâncias e
-  são dominados pelos atributos de maior escala; o Naive Bayes modela cada atributo
-  separadamente. \emph{Seria refutada se} o ganho do Naive Bayes fosse comparável ao
-  dos demais.
-  \item[H2.] Remover atributos redundantes ajuda o
-  Naive Bayes, mas quase não muda o KNN e o SVM. \emph{Mecanismo esperado:} atributos
-  correlacionados violam a independência assumida pelo Naive Bayes, ao passo que KNN
-  e SVM lidam melhor com redundância. \emph{Seria refutada se} a remoção
-  não melhorasse o Naive Bayes ou alterasse também o KNN e o SVM.
-  \item[H3.] Com o mesmo número de dimensões, o PCA mantém um desempenho
-  melhor do que a remoção de atributos correlacionados. \emph{Mecanismo esperado:}
-  o PCA combina todos os atributos e preserva a variância, enquanto a remoção
-  descarta atributos inteiros. \emph{Seria refutada se} a remoção igualasse ou
-  superasse o PCA para o mesmo número de dimensões.
+    \item \textbf{H1:} A padronização beneficia fortemente KNN e SVM (dependentes de distâncias e dominados por atributos de maior escala), mas quase não 
+    altera o Naive Bayes (que modela cada atributo separadamente); seria refutada se o ganho do Naive Bayes fosse comparável ao dos demais.
+    \item \textbf{H2:} Remover atributos redundantes melhora o Naive Bayes (cuja hipótese de independência é violada por correlações), mas quase não altera 
+    KNN e SVM; seria refutada se não melhorasse o Naive Bayes ou alterasse KNN e SVM.
+    \item \textbf{H3:} Com o mesmo número de dimensões, o PCA supera a remoção por correlação por combinar todos os atributos e preservar variância em vez 
+    de descartar variáveis inteiras; seria refutada se a remoção igualasse ou superasse o PCA.
 \end{itemize}
 
 %% ====================================================================
 \section{Metodologia}
 
-\paragraph{Classificadores.}
-Foram utilizados o KNN, o Naive Bayes gaussiano e o SVM com núcleo RBF, todos da
-biblioteca \texttt{scikit-learn} e com hiperparâmetros padrão
-(KNN com $k=5$; SVM com $C=1$ e $\gamma$ ``\texttt{scale}''). Não houve ajuste de
-hiperparâmetros, o que é uma limitação discutida na Seção~\ref{sec:concl}.
+\textbf{Classificadores.} Utilizamos KNN ($k=5$), Naive Bayes gaussiano e SVM com núcleo RBF ($C=1$, $\gamma=\text{``scale''}$) da biblioteca \texttt{scikit-learn}, 
+todos com hiperparâmetros padrão (sem ajuste, limitação discutida na Seção~\ref{sec:conclusao}).
 
-\paragraph{Representações dos dados.}
+\textbf{Representações dos dados.}
 \begin{itemize}
-  \item H1 (escala): dados brutos, normalização Min--Max e
-  padronização (\emph{z-score}).
-  \item H2 (redundância): remoção de atributos por correlação de
-  Pearson, com limiares $|r| > 0{,}99$, $0{,}95$ e $0{,}90$, aplicada aos dados
-  padronizados e comparada com os 16 atributos padronizados; como controles, remoção
-  aleatória do mesmo número de atributos e uma variante sequencial da regra.
-  \item H3 (PCA $\times$ remoção): PCA com o mesmo número de
-  dimensões que restou em cada limiar de remoção da H2, para comparar as duas
-  estratégias em igualdade de dimensão.
+    \item \textbf{H1 (escala):} dados brutos, normalização Min-Max e padronização ($z$-score).
+    \item \textbf{H2 (redundância):} remoção do segundo atributo de cada par com correlação de Pearson $|r|>0{,}99$, $0{,}95$ e $0{,}90$ sobre os dados 
+    padronizados, comparada aos 16 atributos padronizados. Como controles, avaliamos 20 remoções aleatórias do mesmo tamanho e uma variante sequencial da 
+    regra (que compara cada atributo apenas com os já mantidos).
+    \item \textbf{H3 (PCA vs.\ remoção):} PCA com o mesmo número de dimensões restante em cada limiar da H2.
 \end{itemize}
 
-\paragraph{Protocolo experimental.}
-Utilizamos validação cruzada estratificada com 5 \emph{folds} e 3 repetições
-(15 execuções por configuração), com \texttt{random\_state}$=42$.
-Todas as transformações (escala, seleção e PCA) são ajustadas
-apenas nos dados de treino de cada \emph{fold}, dentro de um
-\texttt{Pipeline}, para evitar vazamento de informação.
-
-\paragraph{Métricas.}
-A métrica principal é o F1-macro, escolhida por causa do desbalanceamento
-entre as classes. Também reportamos a acurácia, o tempo de treino e predição e
-matrizes de confusão agregadas. Os resultados são apresentados como média
-$\pm$ desvio padrão das 15 execuções. Como todas as configurações usam as mesmas
-divisões, as representações são comparadas \emph{fold} a \emph{fold}, com testes
-pareados: o $t$ corrigido de Nadeau e Bengio~\cite{nadeau2003} na H2 e o de Wilcoxon na H3.
+\textbf{Protocolo e métricas.} Adotamos validação cruzada estratificada com 5 \textit{folds} e 3 repetições (15 execuções por configuração; 
+\texttt{random\_state=42}), com todas as transformações ajustadas apenas no treino de cada \textit{fold} dentro de um \texttt{Pipeline}. Reportamos 
+média $\pm$ desvio padrão (DP) do F1-macro (métrica principal), além de acurácia, tempo de treino/predição e matrizes de confusão agregadas. As 
+comparações pareadas \textit{fold} a \textit{fold} usam o teste $t$ corrigido de Nadeau e Bengio~\cite{nadeau2003} na H2 ($p<0{,}05$) e o teste 
+de Wilcoxon na H3.
 
 %% ====================================================================
 \section{Resultados e Discussão}
@@ -111,8 +70,7 @@ pareados: o $t$ corrigido de Nadeau e Bengio~\cite{nadeau2003} na H2 e o de Wilc
 
 \subsection{Impacto da escala dos atributos (H1)}
 
-A Tabela~\ref{tab:resultados_h1} resume o F1-macro (média $\pm$ desvio padrão nas 15 execuções) e o tempo médio de treino e predição sob dados brutos, 
-normalização Min-Max e padronização (\textit{z-score}).
+A Tabela~\ref{tab:resultados_h1} resume o F1-macro e o tempo médio de execução nas três representações da H1.
 
 \begin{table}[htbp]
     \centering
@@ -139,28 +97,22 @@ normalização Min-Max e padronização (\textit{z-score}).
 %     \label{fig:h1}
 % \end{figure}
 
-\textbf{KNN e SVM.} Nos dados brutos, atributos de grande escala (\texttt{Area}, \texttt{ConvexArea}) dominam as distâncias e anulam variáveis decimais 
-(\texttt{ShapeFactor}). Com a padronização (\textit{z-score}, ligeiramente superior ao Min-Max), o SVM foi do pior ao melhor desempenho ($+34{,}39$~p.p. 
-e $3{,}6\times$ mais rápido), recuperando Barbunya ($6{,}2\% \rightarrow 90{,}4\%$) e Seker ($26{,}4\% \rightarrow 94{,}9\%$); o KNN ganhou $+20{,}81$~p.p. 
-com menor variância entre \textit{folds}.
+\textbf{KNN e SVM.} Nos dados brutos, atributos de grande escala (\texttt{Area}, \texttt{ConvexArea}) dominam as distâncias e anulam variáveis 
+decimais (\texttt{ShapeFactor}). Com a padronização ($z$-score, ligeiramente superior ao Min-Max), o SVM foi do pior ao melhor desempenho 
+($+34{,}39$~p.p.\ e $3{,}6\times$ mais rápido), recuperando Barbunya ($6{,}2\% \rightarrow 90{,}4\%$) e Seker ($26{,}4\% \rightarrow 94{,}9\%$); 
+o KNN ganhou $+20{,}81$~p.p.\ com menor variância entre \textit{folds}.
 
-\textbf{Naive Bayes e avaliação da H1.} O ganho de $+14{,}13$~p.p. na configuração padrão do \texttt{scikit-learn} decorre de um artefato numérico do
-\texttt{var\_smoothing=1e-9}, que soma $10^{-9}$ da maior variância (\texttt{ConvexArea}, $8{,}9\times10^{8}$) a todos os atributos, distorcendo variáveis decimais.
-Com \texttt{var\_smoothing=0}, o desempenho é idêntico nas três escalas ($90{,}63\% \pm 0{,}56\%$). A H1 é confirmada teoricamente, embora a padronização
-siga recomendável na prática para neutralizar esse viés em bases com variâncias heterogêneas.
+\textbf{Naive Bayes e avaliação da H1.} O ganho de $+14{,}13$~p.p.\ na configuração padrão decorre de um artefato numérico do \texttt{var\_smoothing=1e-9}, 
+que soma $10^{-9}$ da maior variância (\texttt{ConvexArea}, $8{,}9\times 10^8$) a todos os atributos, distorcendo variáveis decimais. Com 
+\texttt{var\_smoothing=0}, o desempenho é idêntico nas três escalas ($90{,}63\% \pm 0{,}56\%$). A H1 é confirmada teoricamente, mas a padronização 
+segue recomendável na prática para neutralizar esse viés em bases com variâncias heterogêneas.
 
 \subsection{Remoção de atributos redundantes (H2)}
 % Pessoa 2. Código: codigos/h2_remocao.py e codigos/analise_h2.py.
 
-Sobre os 16 atributos padronizados, a regra remove o segundo atributo de cada par com
-$|r|$ de Pearson acima do limiar. Com $0{,}99$, $0{,}95$ e $0{,}90$ restam 13, 9 e 7
-atributos, os mesmos em todos os \emph{folds}; saem primeiro as cópias das medidas de
-tamanho (\texttt{ConvexArea} tem $r=1{,}00$ com \texttt{Area}). Cada remoção é comparada
-com a base \emph{fold} a \emph{fold} pelo teste $t$ pareado corrigido de Nadeau e
-Bengio~\cite{nadeau2003}, que desconta a sobreposição entre os conjuntos de treino
-($p<0{,}05$). Usamos dois controles: 20 remoções aleatórias do mesmo número de atributos
-e uma variante \emph{sequencial} da regra, que compara cada atributo apenas com os já
-mantidos (Figura~\ref{fig:h2}).
+Aplicada aos 16 atributos padronizados, a regra de correlação mantém 13, 9 e 7 atributos nos limiares $|r|>0{,}99$, $0{,}95$ e $0{,}90$ 
+(os mesmos em todos os \textit{folds}), removendo primeiro cópias das medidas de tamanho (\texttt{ConvexArea} tem $r=1{,}00$ com \texttt{Area}). 
+A Figura~\ref{fig:h2} compara essas remoções aos controles.
 
 \begin{figure}[htbp]
     \centering
@@ -173,39 +125,21 @@ mantidos (Figura~\ref{fig:h2}).
     \label{fig:h2}
 \end{figure}
 
-\paragraph{Naive Bayes.}
-Ganhou +0,45 e +0,75~p.p.\ com $|r|>0{,}99$ e $0{,}95$, em 15 de 15 \emph{folds}
-($p<0{,}001$), enquanto nenhuma remoção aleatória de 9 atributos chegou a esse valor
-(média de $-1{,}31$~p.p.). O ganho se concentra no par Barbunya/Cali (a confusão de
-Barbunya com Cali cai de 14,1\% para 11,3\%), variedades que se separam mais pela forma do
-que pelo tamanho (diferença padronizada de 1,7 em \texttt{AspectRation} e de 0,6 em
-\texttt{Area}). Com os 16 atributos, o tamanho aparece em seis medidas quase equivalentes,
-e o Naive Bayes, ao multiplicar as verossimilhanças como se os atributos fossem
-independentes, conta essa evidência seis vezes e abafa a da forma.
+\textbf{Limiares $0{,}99$ e $0{,}95$.} O Naive Bayes ganhou $+0{,}45$ e $+0{,}75$~p.p.\ em 15/15 \textit{folds} ($p<0{,}001$), superando todas as remoções 
+aleatórias de 9 atributos (média de $-1{,}31$~p.p.). O ganho concentra-se em Barbunya/Cali (confusão reduzida de $14{,}1\%$ para $11{,}3\%$): com 16 
+atributos, seis medidas redundantes de tamanho multiplicam a mesma evidência e abafam a informação de forma. Nos mesmos limiares, KNN e SVM variaram 
+entre $-0{,}10$ e $+0{,}16$~p.p.\ (sem significância), frente a perdas médias de $2{,}0$ e $1{,}6$~p.p.\ nas remoções aleatórias.
 
-\paragraph{KNN e SVM.}
-Nos mesmos limiares, as diferenças ficaram entre $-0{,}10$ e $+0{,}16$~p.p., sem
-significância, ao passo que as remoções aleatórias de 9 atributos custaram em média 2,0 e
-1,6~p.p. A regra descarta, portanto, quase só informação repetida, que nesses
-classificadores apenas muda o peso de cada direção no cálculo da distância.
-
-\paragraph{O limiar 0,90.}
-O KNN perde 0,99~p.p.\ ($p<0{,}001$), sobretudo ao confundir Dermason com Sira, e o ganho
-do Naive Bayes desaparece. A causa é uma remoção em cadeia: \texttt{ShapeFactor1} sai por
-ser parecido com \texttt{MinorAxisLength}, que também sai, embora sua correlação com os
-atributos mantidos não passe de 0,85. A variante sequencial, que o preserva (8 atributos),
-recupera o padrão previsto: o KNN e o SVM não mudam ($-0{,}13$ e $+0{,}18$~p.p.) e o
-Naive Bayes alcança o maior ganho do estudo (+1,43~p.p., 15/15 \emph{folds}).
-
-\paragraph{Avaliação da H2.}
-\textbf{Confirmada}: sempre que só atributos redundantes são removidos, o Naive Bayes
-melhora de forma consistente e o KNN e o SVM não mudam. O efeito, porém, é pequeno (de 0,45
-a 1,43~p.p., da ordem do desvio entre \emph{folds}) e depende de como a regra escolhe o que
-remover: Pearson só capta relações lineares e, ao percorrer os atributos em ordem, a regra
-pode descartar em cadeia um atributo informativo.
+\textbf{Limiar $0{,}90$ e avaliação da H2.} Em $|r|>0{,}90$, o KNN perde $0{,}99$~p.p.\ ($p<0{,}001$, confundindo Dermason com Sira) e o ganho do Naive 
+Bayes desaparece devido a uma remoção em cadeia: \texttt{ShapeFactor1} é descartado por correlação com \texttt{MinorAxisLength} (que também sai), embora 
+tenha $|r|\le 0{,}85$ com os atributos mantidos. A variante sequencial (8 atributos) preserva \texttt{ShapeFactor1}, mantém KNN e SVM estáveis ($-0{,}13$ 
+e $+0{,}18$~p.p.) e produz o maior ganho do Naive Bayes ($+1{,}43$~p.p., 15/15 \textit{folds}). A H2 é confirmada, mas com efeito pequeno ($0{,}45$ a 
+$1{,}43$~p.p.) e sensível à regra gulosa de descarte.
 
 \subsection{PCA $\times$ remoção de atributos com a mesma dimensão (H3)}
 % Pessoa 3. Figura já inserida; escrever a análise abaixo dela.
+Figura~\ref{fig:h3} compara o PCA (de $k=2$ a $16$ componentes) com a remoção por correlação em igualdade de dimensão ($d \in \{7, 9, 13\}$), avaliada fold a 
+fold pelo teste pareado de Wilcoxon.
 
 \begin{figure}[htbp]
     \centering
@@ -215,92 +149,68 @@ pode descartar em cadeia um atributo informativo.
     \label{fig:h3}
 \end{figure}
 
+\paragraph{Comparação por dimensão.}
+O PCA superou a remoção apenas na redução mais agressiva ($d=7$, correspondente a $|r|>0{,}90$), com ganhos de $+0{,}89$ p.p.\ no KNN ($93{,}42\%$ vs.\ 
+$92{,}53\%$) e $+1{,}06$ p.p.\ no Naive Bayes ($91{,}39\%$ vs.\ $90{,}33\%$), vencendo em 15 de 15 folds ($p<0{,}001$). Como visto na Seção~3.2, essa 
+vantagem decorre do descarte em cadeia de \texttt{ShapeFactor1} pela regra de remoção; na variante sequencial ($d=8$), a remoção empata com o PCA no 
+KNN e no SVM e o supera no Naive Bayes ($+0{,}70$ p.p.). Com $d=9$ ($|r|>0{,}95$) e $d=13$ ($|r|>0{,}99$), o ganho do PCA no KNN cai para no máximo 
+$+0{,}11$ p.p., o SVM apresenta diferenças irrelevantes na prática ($\le 0{,}16$ p.p., com leve vantagem da remoção) e o cenário se inverte no Naive 
+Bayes, no qual a remoção supera o PCA em $0{,}42$ p.p.\ ($d=9$, $p=0{,}01$) e $0{,}98$ p.p.\ ($d=13$, $p<0{,}001$).
+
+\paragraph{Compressão e comportamento do Naive Bayes.}
+A base admite forte compressão: com apenas $k=6$ componentes principais, nenhum classificador perde mais de $0{,}25$ p.p.\ em relação aos 16 atributos 
+padronizados (KNN em $93{,}30\%$ e SVM em $93{,}92\%$), enquanto o Naive Bayes atinge seu pico no PCA ($91{,}42\%$, $+0{,}79$ p.p.). Abaixo disso 
+($k=2$ e $4$), todos degradam acentuadamente. Com $k=16$ (rotação ortogonal sem descarte), KNN e SVM reproduzem exatamente os resultados padronizados 
+por serem invariantes à rotação, mas o Naive Bayes cai para $89{,}49\%$: os últimos componentes carregam pouca variância e mais ruído, porém recebem o 
+mesmo peso no produto das verossimilhanças, o que explica a desvantagem do PCA em $d=9$ e $13$.
+
+\paragraph{Avaliação da H3.}
+Parcialmente confirmada: o PCA só supera a remoção quando esta precisa descartar atributos informativos ($d=7$). Quando apenas redundâncias são 
+eliminadas ($d=9$ e $13$), as técnicas empatam no KNN e no SVM e a remoção supera o PCA no Naive Bayes.
+
 %% ---------------------------------------------------------------------
 \subsection{Comparação geral}\label{sec:geral}
 % Pessoa 5. Tabela gerada por codigos/comparacao_geral.py
 % (rodar de novo quando a H2 existir: a coluna "Melhor H2" entra sozinha).
 
+A Tabela~\ref{tab:comparacao_geral} sintetiza o desempenho nos dados brutos, nos padronizados e na melhor representação de H2 e H3 (cujo efeito próprio é 
+medido sobre os dados padronizados).
+
+
 \input{resultados/geral/tabela_melhores.tex}
 
-A Tabela~\ref{tab:comparacao_geral} reúne, para cada classificador, os dados brutos,
-os dados padronizados e a melhor representação obtida nas demais hipóteses. Como os
-\emph{pipelines} da H2 e da H3 padronizam os dados antes da remoção ou do PCA, o efeito
-próprio dessas técnicas é medido em relação aos dados padronizados, e não aos brutos.
-
-O quadro revela uma hierarquia clara. A escala dos atributos é, de longe, o fator
-dominante: a padronização eleva o F1-macro em 14 a 34~p.p. Uma vez padronizados os
-dados, a redução de dimensionalidade altera o desempenho em no máximo 1,4~p.p. O Naive
-Bayes é o único com ganho perceptível (+1,43~p.p.\ removendo só atributos redundantes, na
-H2, e +0,78~p.p.\ com PCA de 6 componentes, na H3), o que é
-coerente com a violação da independência condicional pelos atributos correlacionados;
-para o KNN e o SVM, as diferenças ($\leq$0,18~p.p.) são menores que um desvio padrão
-entre \emph{folds}. Por outro lado, a base admite forte compressão: com apenas 6
-componentes principais, nenhum classificador perde mais de 0,25~p.p.\ em relação
-aos 16 atributos padronizados. O controle da H2 mostra que isso se deve à redundância, e
-não a usar menos atributos: remoções aleatórias do mesmo tamanho pioram, em média, os três
-classificadores.
-
-Por fim, a representação pesou mais do que a escolha do classificador: nos dados brutos,
-o F1-macro varia de 59,6\% (SVM) a 76,5\% (Naive Bayes), uma diferença de 17~p.p.\ e com
-o SVM em último lugar; após a padronização, os três ficam a menos de 3,5~p.p.\ entre si
-e o SVM passa ao primeiro lugar.
-
+Há uma hierarquia clara: a escala é o fator dominante ($+14$ a $+34$~p.p.), enquanto a redução de dimensionalidade altera o desempenho em no máximo 
+$1{,}4$~p.p. Apenas o Naive Bayes obtém ganho relevante ($+1{,}43$~p.p.\ na H2; $+0{,}78$~p.p.\ na H3); no KNN e no SVM, as variações ($\le 0{,}18$~p.p.) 
+ficam abaixo do desvio entre \textit{folds}. Ainda assim, a base admite forte compressão -- com 6 componentes principais, nenhum modelo perde mais de 
+$0{,}25$~p.p.\ -- graças à redundância dos atributos (remoções aleatórias pioram todos os classificadores). Por fim, a representação pesou mais que a 
+escolha do classificador: nos dados brutos, o F1-macro varia 17~p.p.\ entre modelos (SVM em último); após padronização, a diferença cai para menos de 
+$3{,}5$~p.p.\ e o SVM passa ao primeiro lugar.
 %% ====================================================================
-\section{Conclusão}\label{sec:concl}
-% Pessoa 5.
+\section{Conclusão}
+\label{sec:conclusao}
 
-Este trabalho investigou como a representação dos dados afeta o KNN, o Naive Bayes e o
-SVM na base \emph{Dry Bean}. As hipóteses foram avaliadas da seguinte forma:
+O estudo avaliou o impacto da representação dos dados sobre KNN, Naive Bayes e SVM na base \textit{Dry Bean}:
 
 \begin{itemize}
-  \item \textbf{H1 (confirmada):} a padronização foi decisiva para o KNN
-  (+20,8~p.p.) e o SVM (+34,4~p.p.). O Naive Bayes só variou por um artefato
-  numérico do \texttt{var\_smoothing}; sem ele, seu desempenho foi idêntico nas três
-  representações.
-  \item \textbf{H2 (confirmada, com efeito pequeno):} remover apenas atributos redundantes
-  melhorou o Naive Bayes em 0,45 a 1,43~p.p.\ (15 de 15 \emph{folds}) e não alterou o KNN e o
-  SVM. A única exceção, a perda de 0,99~p.p.\ do KNN com $|r|>0{,}90$, veio de a regra
-  descartar em cadeia um atributo não redundante (\texttt{ShapeFactor1}).
-  \item \textbf{H3 (parcialmente confirmada):} o PCA superou a remoção apenas na
-  redução mais agressiva (7 dimensões), para o KNN (+0,89~p.p.) e o Naive Bayes
-  (+1,06~p.p.), em 15 de 15 \emph{folds} (Wilcoxon, $p<0{,}001$). Com 9 e 13 dimensões,
-  a vantagem do PCA no KNN caiu para no máximo 0,11~p.p.\ e se inverteu no Naive Bayes
-  (remoção melhor em até 0,98~p.p.); no SVM, as diferenças ficaram abaixo de 0,2~p.p. Ou seja, a vantagem do PCA só aparece quando a remoção precisa descartar
-  atributos informativos. A H2 mostra qual: com 7 dimensões, a regra descarta em cadeia
-  o \texttt{ShapeFactor1}. Sem esse efeito (variante sequencial, 8 atributos), a remoção
-  empata com o PCA de 8 componentes no KNN e no SVM e o supera no Naive Bayes
-  (+0,70~p.p.; $t$ corrigido, $p=0{,}04$).
+    \item \textbf{H1 (confirmada):} a padronização foi decisiva para KNN ($+20{,}8$~p.p.) e SVM ($+34{,}4$~p.p.); o Naive Bayes só variou pelo artefato numérico do \texttt{var\_smoothing} e permaneceu invariante sem ele.
+    \item \textbf{H2 (confirmada, efeito pequeno):} remover apenas redundâncias melhorou o Naive Bayes ($+0{,}45$ a $+1{,}43$~p.p.) sem alterar KNN e SVM, exceto quando houve descarte em cadeia em $|r|>0{,}90$.
+    \item \textbf{H3 (parcialmente confirmada):} o PCA superou a remoção apenas com 7 dimensões (devido ao descarte em cadeia); sem esse efeito, a remoção igualou ou superou o PCA.
 \end{itemize}
 
-A principal descoberta é que, nesta base, o pré-processamento de escala importa mais
-do que a escolha do classificador ou a redução de dimensionalidade. Depois da escala, o
-maior ganho veio da remoção de redundância no Naive Bayes: tirar apenas atributos
-repetidos rendeu +1,43~p.p., mais do que o PCA, enquanto remoções aleatórias do mesmo
-tamanho pioraram os três classificadores.
+A principal conclusão é que o pré-processamento de escala importa mais do que a escolha do classificador ou a redução de dimensionalidade; depois da escala, 
+o maior ganho veio da remoção de redundância no Naive Bayes.
 
-\paragraph{Limitações.}
-(i) Todos os classificadores usaram hiperparâmetros padrão; um ajuste de $k$, $C$ e
-$\gamma$ poderia alterar a ordem entre eles e a sensibilidade a cada representação.
-(ii) Foi usada uma única base, cujos atributos geométricos são fortemente
-correlacionados entre si, o que limita a generalização das conclusões.
-(iii) A regra de remoção depende da ordem dos atributos, só capta correlações lineares e
-pode descartar em cadeia um atributo não redundante, o que afetou o limiar $0{,}90$ na
-H2 e na H3.
-(iv) Várias diferenças observadas após a padronização são menores que 1~p.p., da
-ordem do desvio padrão entre \emph{folds}, e só a H2 e a H3 foram acompanhadas de
-testes estatísticos.
+\textbf{Limitações.} (i)~Hiperparâmetros padrão ($k$, $C$, $\gamma$ sem ajuste) podem alterar o ranqueamento entre modelos; (ii)~o uso de uma única base 
+altamente correlacionada limita a generalização; (iii)~a remoção por Pearson é linear, gulosa e dependente da ordem dos atributos; (iv)~várias diferenças 
+pós-padronização são inferiores a 1~p.p.\ e apenas H2 e H3 tiveram testes estatísticos.
+
 
 %% ====================================================================
+
 \begin{thebibliography}{9}
-\bibitem{koklu2020}
-M.~Koklu and I.~A. Özkan.
-\newblock Multiclass classification of dry beans using computer vision and machine
-learning techniques.
-\newblock \emph{Computers and Electronics in Agriculture}, 174:105507, 2020.
-\bibitem{nadeau2003}
-C.~Nadeau and Y.~Bengio.
-\newblock Inference for the generalization error.
-\newblock \emph{Machine Learning}, 52(3):239--281, 2003.
+\small
+\bibitem{koklu2020} M.~Koklu e I.~A.~Özkan. Multiclass classification of dry beans using computer vision and machine learning techniques. \textit{Computers and Electronics in Agriculture}, 174:105507, 2020.
+\bibitem{nadeau2003} C.~Nadeau e Y.~Bengio. Inference for the generalization error. \textit{Machine Learning}, 52(3):239--281, 2003.
 \end{thebibliography}
 
 \end{document}

@@ -105,9 +105,8 @@ o KNN ganhou $+20{,}81$~p.p.\ com menor variância entre \textit{folds}.
 
 \textbf{Naive Bayes e avaliação da H1.} O ganho de $+14{,}13$~p.p.\ na configuração padrão decorre de um artefato numérico do \texttt{var\_smoothing=1e-9}, 
 que soma $10^{-9}$ da maior variância (\texttt{ConvexArea}, $8{,}9\times 10^8$) a todos os atributos, distorcendo variáveis decimais. Com 
-\texttt{var\_smoothing=0}, o desempenho é idêntico nas três escalas ($90{,}63\% \pm 0{,}56\%$). Com a configuração padrão, o critério de refutação
-seria atingido; isolado esse artefato, a H1 é confirmada. Ainda assim, a padronização segue recomendável na prática para neutralizar esse viés em bases
-com variâncias heterogêneas.
+\texttt{var\_smoothing=0}, o desempenho é idêntico nas três escalas ($90{,}63\% \pm 0{,}56\%$). Isolado esse artefato, a H1 é confirmada, e a
+padronização segue recomendável para neutralizar esse viés.
 
 \subsection{Remoção de atributos redundantes (H2)}\label{sec:h2}
 % Pessoa 2. Código: codigos/h2_remocao.py e codigos/analise_h2.py.
@@ -156,27 +155,26 @@ O PCA superou a remoção apenas na redução mais agressiva ($d=7$, corresponde
 $92{,}53\%$) e $+1{,}06$ p.p.\ no Naive Bayes ($91{,}39\%$ vs.\ $90{,}33\%$), vencendo em 15 de 15 \textit{folds} ($p<0{,}001$). Como visto na
 Seção~\ref{sec:h2}, essa vantagem decorre do descarte em cadeia de \texttt{ShapeFactor1} pela regra de remoção; na variante sequencial ($d=8$), a remoção empata com o PCA no 
 KNN e no SVM e o supera no Naive Bayes ($+0{,}70$ p.p.). Com $d=9$ ($|r|>0{,}95$) e $d=13$ ($|r|>0{,}99$), o ganho do PCA no KNN cai para no máximo 
-$+0{,}11$ p.p., o SVM apresenta diferenças irrelevantes na prática ($\le 0{,}16$ p.p., sem significância) e o cenário se inverte no Naive
-Bayes: em $d=9$ a remoção fica à frente por $0{,}42$ p.p., sem significância ($p=0{,}17$), e em $d=13$ supera o PCA em $0{,}98$ p.p.\ ($p<0{,}01$).
+$+0{,}11$ p.p., o SVM não muda ($\le 0{,}16$ p.p.) e, no Naive Bayes, a remoção empata em $d=9$ ($-0{,}42$ p.p., $p=0{,}17$) e supera o PCA
+em $d=13$ ($0{,}98$ p.p., $p<0{,}01$).
 
 \paragraph{Compressão e comportamento do Naive Bayes.}
 A base admite forte compressão: com apenas $k=6$ componentes principais, nenhum classificador perde mais de $0{,}25$ p.p.\ em relação aos 16 atributos 
 padronizados (KNN em $93{,}30\%$ e SVM em $93{,}92\%$), enquanto o Naive Bayes atinge seu pico no PCA ($91{,}42\%$, $+0{,}78$ p.p.). Abaixo disso 
 ($k=2$ e $4$), todos degradam acentuadamente. Com $k=16$ (rotação ortogonal sem descarte), KNN e SVM reproduzem exatamente os resultados padronizados 
 por serem invariantes à rotação, mas o Naive Bayes cai para $89{,}49\%$: os últimos componentes carregam pouca variância e mais ruído, porém recebem o 
-mesmo peso no produto das verossimilhanças, o que provavelmente explica a desvantagem do PCA em $d=9$ e $13$ (hipótese não testada diretamente).
+mesmo peso no produto das verossimilhanças, o que provavelmente explica a desvantagem do PCA em $d=9$ e $13$.
 
 \paragraph{Avaliação da H3.}
-Parcialmente confirmada: o PCA só supera a remoção quando esta precisa descartar atributos informativos ($d=7$). Quando apenas redundâncias são 
-eliminadas ($d=9$ e $13$), as técnicas empatam no KNN e no SVM, e no Naive Bayes a remoção empata ($d=9$) ou supera o PCA ($d=13$).
+Parcialmente confirmada: o PCA só supera a remoção quando esta descarta atributos informativos ($d=7$); quando ela elimina apenas redundâncias,
+empata ou vence.
 
 %% ---------------------------------------------------------------------
 \subsection{Comparação geral}\label{sec:geral}
 % Pessoa 5. Tabela gerada por codigos/comparacao_geral.py
 % (rodar de novo quando a H2 existir: a coluna "Melhor H2" entra sozinha).
 
-A Tabela~\ref{tab:comparacao_geral} sintetiza o desempenho nos dados brutos, nos padronizados e na melhor representação de H2 e H3 (cujo efeito próprio é 
-medido sobre os dados padronizados).
+A Tabela~\ref{tab:comparacao_geral} sintetiza o desempenho nos dados brutos, nos padronizados e na melhor representação de H2 e H3.
 
 
 \input{resultados/geral/tabela_melhores.tex}
@@ -184,8 +182,8 @@ medido sobre os dados padronizados).
 Há uma hierarquia clara: a escala é o fator dominante ($+21$ a $+34$~p.p.\ no KNN e no SVM), enquanto as reduções de dimensionalidade que preservam a
 informação (PCA com $k \ge 6$ e remoção sem descarte em cadeia) alteram o desempenho em no máximo $1{,}4$~p.p.; com $k \le 4$, todos os classificadores
 perdem de $3{,}6$ a $8{,}6$~p.p. Apenas o Naive Bayes obtém ganho relevante ($+1{,}43$~p.p.\ na H2; $+0{,}78$~p.p.\ na H3); no KNN e no SVM, as variações ($\le 0{,}18$~p.p.) 
-ficam abaixo do desvio entre \textit{folds}. Ainda assim, a base admite forte compressão -- com 6 componentes principais, nenhum modelo perde mais de 
-$0{,}25$~p.p.\ -- graças à redundância dos atributos (remoções aleatórias pioram todos os classificadores). Por fim, a representação pesou mais que a 
+ficam abaixo do desvio entre \textit{folds}. Como remoções aleatórias pioram todos os classificadores, a compressão possível vem da redundância
+dos atributos. Por fim, a representação pesou mais que a 
 escolha do classificador: nos dados brutos, o F1-macro varia 17~p.p.\ entre modelos (SVM em último); após padronização, a diferença cai para menos de 
 $3{,}5$~p.p.\ e o SVM passa ao primeiro lugar.
 %% ====================================================================
